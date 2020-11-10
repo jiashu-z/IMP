@@ -8,29 +8,32 @@ import time
 
 # import multiprocessing as mp
 # TODO: This is not a memory optimized version.
-def ise_ic(graph, seeds) -> int:
-    activated_num = len(seeds)
+def ise_ic(graph, activated_set) -> int:
+    activated_num = len(activated_set)
     activated: list = [False] * (vertex_num + 1)
-    activated_queue: list = []
-    visited: list = [False] * (vertex_num + 1)
-    for vertex in seeds:
+    for vertex in activated_set:
         activated[vertex] = True
-        activated_queue.append(vertex)
-    for vertex in activated_queue:
-        if visited[vertex]:
-            continue
-        activated_num += 1
-        visited[vertex] = True
-        for dest, val in graph[vertex].items():
-            if activated[dest]:
-                continue
-            ran = np.random.random()
-            if ran <= val:
-                activated[dest] = True
-                activated_queue.append(dest)
+    while len(activated_set) > 0:
+        new_activated_set = set()
+        for vertex in activated_set:
+            for item in graph[vertex].items():
+                if activated[item[0]]:
+                    continue
+                ran = np.random.random()
+                if ran <= item[1]:
+                    activated[item[0]] = True
+                    new_activated_set.add(item[0])
+        activated_num += len(new_activated_set)
+        activated_set = new_activated_set
     return activated_num
 
 
+# TODO: Complete LT.
+def ise_lt(graph, seeds) -> int:
+    pass
+
+
+# TODO: The graph does not support LT now.
 if __name__ == '__main__':
     np.random.seed(int(time.time()))
     parser = argparse.ArgumentParser()
@@ -64,7 +67,7 @@ if __name__ == '__main__':
     for line in lines:
         seed_list.append(int(line))
     if model == 'IC':
-        res = ise_ic(graph=list_graph, seeds=seed_list)
+        res = ise_ic(graph=list_graph, activated_set=seed_list)
     else:
         res = -1
     print(res)
