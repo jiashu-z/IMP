@@ -1,5 +1,7 @@
 # -i DatasetOnTestPlatform/network.txt -s DatasetOnTestPlatform/network_seeds.txt -m IC -t 60
+# -i DatasetOnTestPlatform/network.txt -s DatasetOnTestPlatform/network_seeds.txt -m LT -t 60
 # -i DatasetOnTestPlatform/NetHEPT.txt -s DatasetOnTestPlatform/network_seeds.txt -m IC -t 60
+# -i DatasetOnTestPlatform/NetHEPT.txt -s DatasetOnTestPlatform/network_seeds.txt -m LT -t 60
 
 import argparse
 import numpy as np
@@ -28,12 +30,45 @@ def ise_ic(graph, activated_set) -> int:
     return activated_num
 
 
-# TODO: Complete LT.
-def ise_lt(graph, seeds) -> int:
-    pass
+# TODO: This is not a memory optimized version.
+def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
+    activated_num = len(activated_set)
+    activated: list = [False] * (vertex_num + 1)
+    for vertex in activated_set:
+        activated[vertex] = True
+    threshold_list = []
+
+    tmp: int = 0
+    while tmp <= len(lt_out_graph):
+        threshold_list.append(np.random.random())
+        tmp += 1
+
+    tmp = 1
+    while tmp <= len(lt_out_graph):
+        if threshold_list[tmp] == 0:
+            activated_set.append(tmp)
+        tmp += 1
+
+    while len(activated_set) > 0:
+        new_activated_set = set()
+        for vertex in activated_set:
+            for item in lt_out_graph[vertex].items():
+                if activated[item[0]]:
+                    continue
+                dest: int = item[0]
+                acc: float = 0.0
+                for item1 in lt_in_graph[dest].items():
+                    if activated[item1[0]]:
+                        acc += item1[1]
+                if acc >= threshold_list[dest]:
+                    activated[dest] = True
+                    new_activated_set.add(dest)
+        activated_num += len(new_activated_set)
+        activated_set = new_activated_set
+    return activated_num
 
 
-# TODO: The graph does not support LT now.
+# TODO: Add average.
 if __name__ == '__main__':
     np.random.seed(int(time.time()))
     parser = argparse.ArgumentParser()
@@ -53,12 +88,16 @@ if __name__ == '__main__':
     fin.close()
     l0 = lines[0].split(' ')
     vertex_num: int = int(l0[0])
-    list_graph = []
+    out_graph = []
+    in_graph = []
     for i in range(0, vertex_num + 1):
-        list_graph.append({})
+        out_graph.append({})
+        in_graph.append({})
     for line in lines[1:]:
         tokens = line.split(' ')
-        list_graph[int(tokens[0])][int(tokens[1])] = float(tokens[2])
+        out_graph[int(tokens[0])][int(tokens[1])] = float(tokens[2])
+        if model == 'LT':
+            in_graph[int(tokens[1])][int(tokens[0])] = float(tokens[2])
 
     fin = open(seed)
     lines = fin.readlines()
@@ -67,7 +106,7 @@ if __name__ == '__main__':
     for line in lines:
         seed_list.append(int(line))
     if model == 'IC':
-        res = ise_ic(graph=list_graph, activated_set=seed_list)
+        res = ise_ic(graph=out_graph, activated_set=seed_list)
     else:
-        res = -1
+        res = ise_lt(lt_out_graph=out_graph, lt_in_graph=in_graph, activated_set=seed_list)
     print(res)
