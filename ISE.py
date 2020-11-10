@@ -1,10 +1,38 @@
 # -i DatasetOnTestPlatform/network.txt -s DatasetOnTestPlatform/network_seeds.txt -m IC -t 60
+# -i DatasetOnTestPlatform/NetHEPT.txt -s DatasetOnTestPlatform/network_seeds.txt -m IC -t 60
 
 import argparse
+import numpy as np
+import time
+
 
 # import multiprocessing as mp
+# TODO: This is not a memory optimized version.
+def ise_ic(graph, seeds) -> int:
+    activated_num = len(seeds)
+    activated: list = [False] * (vertex_num + 1)
+    activated_queue: list = []
+    visited: list = [False] * (vertex_num + 1)
+    for vertex in seeds:
+        activated[vertex] = True
+        activated_queue.append(vertex)
+    for vertex in activated_queue:
+        if visited[vertex]:
+            continue
+        activated_num += 1
+        visited[vertex] = True
+        for dest, val in graph[vertex].items():
+            if activated[dest]:
+                continue
+            ran = np.random.random()
+            if ran <= val:
+                activated[dest] = True
+                activated_queue.append(dest)
+    return activated_num
+
 
 if __name__ == '__main__':
+    np.random.seed(int(time.time()))
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--file_name', type=str, default='network.txt')
     parser.add_argument('-s', '--seed', type=str, default='seeds.txt')
@@ -29,15 +57,14 @@ if __name__ == '__main__':
         tokens = line.split(' ')
         list_graph[int(tokens[0])][int(tokens[1])] = float(tokens[2])
 
-    activated: list = [False] * (vertex_num + 1)
-    visited: list = [False] * (vertex_num + 1)
     fin = open(seed)
     lines = fin.readlines()
     fin.close()
     seed_list = []
     for line in lines:
-        activated[int(line)] = True
         seed_list.append(int(line))
-
-    # print(list_graph)
-    # print(seed_list)
+    if model == 'IC':
+        res = ise_ic(graph=list_graph, seeds=seed_list)
+    else:
+        res = -1
+    print(res)
