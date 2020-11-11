@@ -8,6 +8,16 @@ import numpy as np
 import time
 
 
+# TODO: Dynamically adjust the number of rounds.
+def ise_ic_expect(graph, activated_set) -> float:
+    summation: float = 0.0
+    ic_round: int = 0
+    while ic_round < 10000:
+        summation += ise_ic(graph=graph, activated_set=activated_set)
+        ic_round += 1
+    return summation / ic_round
+
+
 # import multiprocessing as mp
 # TODO: This is not a memory optimized version.
 def ise_ic(graph, activated_set) -> int:
@@ -28,6 +38,17 @@ def ise_ic(graph, activated_set) -> int:
         activated_num += len(new_activated_set)
         activated_set = new_activated_set
     return activated_num
+
+
+# TODO: Dynamically adjust the number of rounds.
+def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set) -> float:
+    summation: float = 0.0
+    lt_round: int = 0
+    while lt_round < 10000:
+        summation += ise_lt(lt_out_graph=lt_out_graph, lt_in_graph=lt_in_graph,
+                            activated_set=activated_set)
+        lt_round += 1
+    return summation / lt_round
 
 
 # TODO: This is not a memory optimized version.
@@ -106,7 +127,7 @@ if __name__ == '__main__':
     for line in lines:
         seed_list.append(int(line))
     if model == 'IC':
-        res = ise_ic(graph=out_graph, activated_set=seed_list)
+        res = ise_ic_expect(graph=out_graph, activated_set=seed_list)
     else:
-        res = ise_lt(lt_out_graph=out_graph, lt_in_graph=in_graph, activated_set=seed_list)
+        res = ise_lt_expect(lt_out_graph=out_graph, lt_in_graph=in_graph, activated_set=seed_list)
     print(res)
