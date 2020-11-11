@@ -18,8 +18,7 @@ def ise_ic_expect(graph, activated_set) -> float:
     return summation / ic_round
 
 
-# import multiprocessing as mp
-# TODO: This is not a memory optimized version.
+# TODO: This is not a time and space optimized version.
 def ise_ic(graph, activated_set) -> int:
     activated_num = len(activated_set)
     activated: list = [False] * (vertex_num + 1)
@@ -51,7 +50,7 @@ def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set) -> float:
     return summation / lt_round
 
 
-# TODO: This is not a memory optimized version.
+# TODO: This is not a time and space optimized version.
 def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
     activated_num = len(activated_set)
     activated: list = [False] * (vertex_num + 1)
@@ -89,7 +88,7 @@ def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
     return activated_num
 
 
-# TODO: Add average.
+# TODO: Add multi-processing parallelism.
 if __name__ == '__main__':
     np.random.seed(int(time.time()))
     parser = argparse.ArgumentParser()
