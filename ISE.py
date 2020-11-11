@@ -12,7 +12,7 @@ import time
 def ise_ic_expect(graph, activated_set) -> float:
     summation: float = 0.0
     ic_round: int = 0
-    while ic_round < 10000:
+    while ic_round < 1000:
         summation += ise_ic(graph=graph, activated_set=activated_set)
         ic_round += 1
     return summation / ic_round
@@ -43,7 +43,7 @@ def ise_ic(graph, activated_set) -> int:
 def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set) -> float:
     summation: float = 0.0
     lt_round: int = 0
-    while lt_round < 10000:
+    while lt_round < 1000:
         summation += ise_lt(lt_out_graph=lt_out_graph, lt_in_graph=lt_in_graph,
                             activated_set=activated_set)
         lt_round += 1
@@ -56,12 +56,8 @@ def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
     activated: list = [False] * (vertex_num + 1)
     for vertex in activated_set:
         activated[vertex] = True
-    threshold_list = []
-
-    tmp: int = 0
-    while tmp <= len(lt_out_graph):
-        threshold_list.append(np.random.random())
-        tmp += 1
+    # numpy is awesome!
+    threshold_list = np.random.uniform(size=(len(lt_out_graph) + 1))
 
     tmp = 1
     while tmp <= len(lt_out_graph):
