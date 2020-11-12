@@ -2,3 +2,4 @@ DatasetOnTestPlatform
 venv
 .idea
 argmentparser_and_mutilprocessing_demo.py
+.DS_Store
