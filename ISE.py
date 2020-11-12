@@ -86,6 +86,7 @@ def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
 
 # TODO: Add multi-processing parallelism.
 if __name__ == '__main__':
+    start = time.time()
     np.random.seed(int(time.time()))
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--file_name', type=str, default='network.txt')
@@ -138,3 +139,5 @@ if __name__ == '__main__':
         res = ise_lt_expect(lt_out_graph=out_graph, lt_in_graph=in_graph, activated_set=seed_list)
 
     print(res)
+    end = time.time()
+    print(end - start)
