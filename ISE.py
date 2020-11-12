@@ -49,7 +49,8 @@ def ise_ic(graph, activated_set, num) -> int:
 
 
 # TODO: Dynamically adjust the number of rounds.
-def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set, lt_vertex_num, start_time, limit) -> float:
+def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set, lt_vertex_num, start_time,
+                  limit) -> float:
     summation: float = 0.0
     lt_round: int = 0
     while True:
@@ -58,7 +59,6 @@ def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set, lt_vertex_num, start
         summation += ise_lt(lt_out_graph=lt_out_graph, lt_in_graph=lt_in_graph,
                             activated_set=activated_set, num=lt_vertex_num)
         lt_round += 1
-    print(lt_round)
     return summation / lt_round
 
 
@@ -139,7 +139,8 @@ if __name__ == '__main__':
             out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
         for i in range(core):
             processes.append(
-                pool.apply_async(ise_ic_expect, args=(out_graph, seed_list, vertex_num)))
+                pool.apply_async(ise_ic_expect, args=(
+                    out_graph, seed_list, vertex_num, time.time(), time_limit - 5)))
     else:
         out_graph = []
         in_graph = []
@@ -163,5 +164,4 @@ if __name__ == '__main__':
     print(res / core)
     end = time.time()
     sys.stdout.flush()
-    print(end - start)
     os._exit
