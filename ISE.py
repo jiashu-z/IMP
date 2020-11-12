@@ -6,6 +6,7 @@
 import argparse
 import numpy as np
 import time
+import random
 
 
 # TODO: Dynamically adjust the number of rounds.
@@ -27,10 +28,10 @@ def ise_ic(graph, activated_set) -> int:
     while len(activated_set) > 0:
         new_activated_set = set()
         for vertex in activated_set:
-            for item in graph[vertex].items():
+            for item in graph[vertex]:
                 if activated[item[0]]:
                     continue
-                ran = np.random.random()
+                ran = random.random()
                 if ran <= item[1]:
                     activated[item[0]] = True
                     new_activated_set.add(item[0])
@@ -59,21 +60,20 @@ def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
     # numpy is awesome!
     threshold_list = np.random.uniform(size=(len(lt_out_graph) + 1))
 
-    tmp = 1
-    while tmp <= len(lt_out_graph):
+    length = len(lt_out_graph)
+    for tmp in range(0, length + 1):
         if threshold_list[tmp] == 0:
             activated_set.append(tmp)
-        tmp += 1
 
     while len(activated_set) > 0:
         new_activated_set = set()
         for vertex in activated_set:
-            for item in lt_out_graph[vertex].items():
+            for item in lt_out_graph[vertex]:
                 if activated[item[0]]:
                     continue
                 dest: int = item[0]
                 acc: float = 0.0
-                for item1 in lt_in_graph[dest].items():
+                for item1 in lt_in_graph[dest]:
                     if activated[item1[0]]:
                         acc += item1[1]
                 if acc >= threshold_list[dest]:
@@ -99,30 +99,42 @@ if __name__ == '__main__':
     model = args.model
     time_limit = args.time_limit
 
-    fin = open(file_name)
-    lines = fin.readlines()
-    fin.close()
-    l0 = lines[0].split(' ')
-    vertex_num: int = int(l0[0])
-    out_graph = []
-    in_graph = []
-    for i in range(0, vertex_num + 1):
-        out_graph.append({})
-        in_graph.append({})
-    for line in lines[1:]:
-        tokens = line.split(' ')
-        out_graph[int(tokens[0])][int(tokens[1])] = float(tokens[2])
-        if model == 'LT':
-            in_graph[int(tokens[1])][int(tokens[0])] = float(tokens[2])
-
     fin = open(seed)
     lines = fin.readlines()
     fin.close()
     seed_list = []
     for line in lines:
         seed_list.append(int(line))
+
+    fin = open(file_name)
+    lines = fin.readlines()
+    fin.close()
+
+    l0 = lines[0].split(' ')
+    vertex_num: int = int(l0[0])
+
     if model == 'IC':
+        out_graph = []
+        i: int = 0
+        while i <= vertex_num:
+            out_graph.append([])
+            i += 1
+        for line in lines[1:]:
+            tokens = line.split(' ')
+            out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
         res = ise_ic_expect(graph=out_graph, activated_set=seed_list)
     else:
+        out_graph = []
+        in_graph = []
+        i: int = 0
+        while i <= vertex_num:
+            out_graph.append([])
+            in_graph.append([])
+            i += 1
+        for line in lines[1:]:
+            tokens = line.split(' ')
+            out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
+            in_graph[int(tokens[1])].append((int(tokens[0]), float(tokens[2])))
         res = ise_lt_expect(lt_out_graph=out_graph, lt_in_graph=in_graph, activated_set=seed_list)
+
     print(res)
