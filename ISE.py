@@ -2,12 +2,15 @@
 # -i DatasetOnTestPlatform/network.txt -s DatasetOnTestPlatform/network_seeds.txt -m LT -t 60
 # -i DatasetOnTestPlatform/NetHEPT.txt -s DatasetOnTestPlatform/network_seeds.txt -m IC -t 60
 # -i DatasetOnTestPlatform/NetHEPT.txt -s DatasetOnTestPlatform/network_seeds.txt -m LT -t 60
+# -i DatasetOnTestPlatform/in_60000_150000_1.txt -s DatasetOnTestPlatform/seed_6000_1.txt -m IC -t 60
 
 import argparse
 import numpy as np
 import time
 import random
 import multiprocessing as mp
+import sys
+import os
 
 core = 4
 
@@ -16,7 +19,7 @@ core = 4
 def ise_ic_expect(graph, activated_set, ic_vertex_num) -> float:
     summation: float = 0.0
     ic_round: int = 0
-    while ic_round < 250:
+    while ic_round < 2500:
         summation += ise_ic(graph=graph, activated_set=activated_set, num=ic_vertex_num)
         ic_round += 1
     return summation / ic_round
@@ -47,7 +50,7 @@ def ise_ic(graph, activated_set, num) -> int:
 def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set, lt_vertex_num) -> float:
     summation: float = 0.0
     lt_round: int = 0
-    while lt_round < 250:
+    while lt_round < 400:
         summation += ise_lt(lt_out_graph=lt_out_graph, lt_in_graph=lt_in_graph,
                             activated_set=activated_set, num=lt_vertex_num)
         lt_round += 1
@@ -87,11 +90,11 @@ def ise_lt(lt_out_graph, lt_in_graph, activated_set, num) -> int:
     return activated_num
 
 
-# TODO: Add multi-processing parallelism.
 if __name__ == '__main__':
     start = time.time()
     np.random.seed(int(time.time()))
     pool = mp.Pool(core)
+    processes = []
     result = [0.0] * core
     res: float = 0.0
 
@@ -130,13 +133,8 @@ if __name__ == '__main__':
             tokens = line.split(' ')
             out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
         for i in range(core):
-            result.append(
-                pool.apply_async(ise_ic_expect, args=(out_graph, seed_list, vertex_num)).get())
-        pool.close()
-        pool.join()
-        for r in result:
-            res += r
-        res /= core
+            processes.append(
+                pool.apply_async(ise_ic_expect, args=(out_graph, seed_list, vertex_num)))
     else:
         out_graph = []
         in_graph = []
@@ -149,12 +147,16 @@ if __name__ == '__main__':
             out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
             in_graph[int(tokens[1])].append((int(tokens[0]), float(tokens[2])))
         for i in range(core):
-            result[i] = pool.apply_async(ise_lt_expect,
-                                         args=(out_graph, in_graph, seed_list, vertex_num)).get()
-        pool.close()
-        pool.join()
-        for r in result:
-            res += r
-        res /= core
+            processes.append(
+                pool.apply_async(ise_lt_expect, args=(out_graph, in_graph, seed_list, vertex_num)))
+
+    pool.close()
+    pool.join()
+    for process in processes:
+        res += process.get()
+
+    print(res / core)
     end = time.time()
+    sys.stdout.flush()
     print(end - start)
+    os._exit
