@@ -15,7 +15,6 @@ import os
 core = 7
 
 
-# TODO: Dynamically adjust the number of rounds.
 def ise_ic_expect(graph, activated_set, ic_vertex_num, start_time, limit) -> float:
     summation: float = 0.0
     ic_round: int = 0
@@ -27,7 +26,6 @@ def ise_ic_expect(graph, activated_set, ic_vertex_num, start_time, limit) -> flo
     return summation / ic_round
 
 
-# TODO: This is not a time and space optimized version.
 def ise_ic(graph, activated_set, num) -> int:
     activated_num = len(activated_set)
     activated: list = [False] * (num + 1)
@@ -48,7 +46,6 @@ def ise_ic(graph, activated_set, num) -> int:
     return activated_num
 
 
-# TODO: Dynamically adjust the number of rounds.
 def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set, lt_vertex_num, start_time, limit) -> float:
     summation: float = 0.0
     lt_round: int = 0
@@ -58,17 +55,15 @@ def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set, lt_vertex_num, start
         summation += ise_lt(lt_out_graph=lt_out_graph, lt_in_graph=lt_in_graph,
                             activated_set=activated_set, num=lt_vertex_num)
         lt_round += 1
-    print(lt_round)
     return summation / lt_round
 
 
-# TODO: This is not a time and space optimized version.
 def ise_lt(lt_out_graph, lt_in_graph, activated_set, num) -> int:
     activated_num = len(activated_set)
     activated: list = [False] * (num + 1)
     for vertex in activated_set:
         activated[vertex] = True
-    # numpy is awesome!
+    np.random.seed(random.randint(0, 19260817))
     threshold_list = np.random.uniform(size=(len(lt_out_graph) + 1))
 
     length = len(lt_out_graph)
@@ -139,7 +134,7 @@ if __name__ == '__main__':
             out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
         for i in range(core):
             processes.append(
-                pool.apply_async(ise_ic_expect, args=(out_graph, seed_list, vertex_num)))
+                pool.apply_async(ise_ic_expect, args=(out_graph, seed_list, vertex_num, time.time(), time_limit - 5)))
     else:
         out_graph = []
         in_graph = []
@@ -160,8 +155,8 @@ if __name__ == '__main__':
     for process in processes:
         res += process.get()
 
-    print(res / core)
-    end = time.time()
+    # print(res / core)
+    # end = time.time()
     sys.stdout.flush()
-    print(end - start)
+    # print(end - start)
     os._exit
