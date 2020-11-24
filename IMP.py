@@ -4,13 +4,23 @@ import time
 import random
 # import multiprocessing as mp
 # import sys
-# import os
+import os
 import math
+
+
+def log_comb(n, k):
+    res = 0
+    while n > k:
+        res += math.log(n)
+        n -= 1
+    while k > 1:
+        res -= math.log()
 
 
 def IMM(out_graph, in_graph, n, k, epsilon, l, model):
     l = l * (1 + 0.6931471805599453 / math.log(n))
     R = sampling(out_graph, in_graph, n, k, epsilon, l, model)
+    print('sampling done')
     S_k = node_select(R, k)
     return S_k
 
@@ -47,16 +57,20 @@ def node_select(R, k):
 
 
 def generate_rr(out_graph, in_graph, v, model):
+    # print('generate_rr', v)
     activate_set = set()
     activate_set.add(v)
     activated = set()
     if model == 'IC':
         while len(activate_set) > 0:
+            # print(len(activate_set))
             act = activate_set.pop()
             activated.add(act)
             for (source, dest, weight) in in_graph[act]:
                 if weight >= random.random():
-                    activate_set.add(source)
+                    if source not in activated:
+                        activate_set.add(source)
+                        # print(activate_set)
         return activated
     else:
         while len(activate_set) > 0:
@@ -84,8 +98,12 @@ def comb(n, k):
 
 
 def lambda_prime(n, k, l, epsilon_prime):
-    numerator = (2 + 2 * epsilon_prime / 3) * (math.log(comb(n, k)) + l * math.log(n) + math.log(math.log2(n))) * n
+    print('epsilon_prime', epsilon_prime)
+    numerator = (2 + 2 * epsilon_prime / 3) * (
+            math.log(comb(n, k)) + l * math.log(n) + math.log(math.log2(n))) * n
     denominator = epsilon_prime ** 2
+    print('numerator', numerator)
+    print('denominator', denominator)
     return numerator / denominator
 
 
@@ -96,7 +114,10 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
     i = 1
     while i < math.log2(n):
         x = n / math.pow(2, i)
+        print('n', n)
+        print('x', x)
         theta_i = lambda_prime(n, k, l, epsilon_prime) / x
+        print('theta_i', theta_i)
         while len(R) < theta_i:
             v = random.randint(1, n + 1)
             RR = generate_rr(out_graph, in_graph, v, model)
@@ -108,7 +129,8 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
         i += 1
 
     alpha = math.sqrt(l * math.log(n) + 0.6931471805599453)
-    beta = math.sqrt((1 - 1 / math.e) * (math.log(comb(n, k)) + l * math.log(n) + 0.6931471805599453))
+    beta = math.sqrt(
+        (1 - 1 / math.e) * (math.log(comb(n, k)) + l * math.log(n) + 0.6931471805599453))
     lambda_star = 2 * n * (((1 - 1 / math.e) * alpha + beta) ** 2) * (epsilon ** -2)
     theta = lambda_star / LB
     while len(R) < theta:
@@ -134,7 +156,7 @@ if __name__ == '__main__':
     network = args.network
     seedCount = args.seedCount
     model = args.model
-    time = args.time
+    time_limit = args.time
 
     fin = open(network)
     lines = fin.readlines()
@@ -159,6 +181,9 @@ if __name__ == '__main__':
         weight = float(tokens[2])
         outGraph[source].append((source, dest, weight))
         inGraph[dest].append((source, dest, weight))
+
+    end = time.time()
+    print('read graph: ', end - start)
 
     epsilon = 0.5
     l = 1
