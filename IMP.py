@@ -85,6 +85,8 @@ def generate_rr(out_graph, in_graph, v, model):
                 rand_map = {}
                 sum = 0.0
                 for (source, dest, weight) in in_graph[act]:
+                    if source in activated:
+                        continue
                     rand_map[source] = random.random()
                     sum += rand_map[source]
                 for (source, dest, weight) in in_graph[act]:
@@ -123,7 +125,7 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
     epsilon_prime = epsilon * 1.41421356237
     i = 1
     upper = math.log2(n)
-    while i < upper:
+    for i in range(1, int(math.log2(n - 1)) + 1):
         # print('sampling', i, math.log2(n))
         x = n / math.pow(2, i)
         theta_i = lambda_prime(n, k, l, epsilon_prime) / x
@@ -140,7 +142,6 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
         if n * cover_ratio >= (1 + epsilon_prime) * x:
             LB = n * cover_ratio / (1 + epsilon_prime)
             break
-        i += 1
 
     alpha = math.sqrt(l * math.log(n) + 0.6931471805599453)
     beta = math.sqrt(
