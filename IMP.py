@@ -33,7 +33,7 @@ def F_R(R, S):
             count += 1
     return count / denominator
 
-# TODO: A Bug.
+
 def node_select(R, k):
     S_k = set()
     vertex_list_map = {}
@@ -50,8 +50,8 @@ def node_select(R, k):
         #         print('DUPLICATE!!!')
         for vertex in R[i]:
             if vertex not in vertex_list_map:
-                vertex_list_map[vertex] = []
-            vertex_list_map[vertex].append(i)
+                vertex_list_map[vertex] = set()
+            vertex_list_map[vertex].add(i)
         i += 1
     for vertex in vertex_list_map:
         vertex_frequency_map[vertex] = len(vertex_list_map[vertex])
@@ -66,10 +66,15 @@ def node_select(R, k):
         S_k.add(v)
         for rr_id in vertex_list_map[v]:
             for vertex in R[rr_id]:
+                if vertex == v:
+                    continue
                 vertex_frequency_map[vertex] -= 1
-    for k, v in vertex_frequency_map.items():
-        if v < 0:
-            print(k, v, 'v < 0!!!')
+                vertex_list_map[vertex].remove(rr_id)
+        del [vertex_list_map[v]]
+        del [vertex_frequency_map[v]]
+    # for k, v in vertex_frequency_map.items():
+    #     if v < 0:
+    #         print(k, v, 'v < 0!!!')
     return S_k
 
 
