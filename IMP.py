@@ -1,6 +1,7 @@
 import argparse
 import random
 import math
+import time
 
 
 def log_comb(n, k) -> float:
@@ -121,8 +122,9 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
     R = []
     epsilon_prime = epsilon * 1.41421356237
     i = 1
-    upper = math.log2(n)
-    for i in range(1, int(math.log2(n - 1)) + 1):
+    upper = int(math.log2(n - 1)) + 1
+    while time.time() - start < time_limit - 20:
+        # while i < upper:
         # print('sampling', i, math.log2(n))
         x = n / math.pow(2, i)
         theta_i = lambda_prime(n, k, l, epsilon_prime) / x
@@ -136,15 +138,18 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
         # print('Exit node select')
 
         cover_ratio = F_R(R, S_i)
-        if n * cover_ratio >= (1 + epsilon_prime) * x:
-            LB = n * cover_ratio / (1 + epsilon_prime)
-            break
+        # if n * cover_ratio >= (1 + epsilon_prime) * x:
+        LB = n * cover_ratio / (1 + epsilon_prime)
+        # break
+        # i += 1
 
+    # print('exhausted', len(R))
     alpha = math.sqrt(l * math.log(n) + 0.6931471805599453)
     beta = math.sqrt(
         (1 - 1 / math.e) * (log_comb(n, k) + l * math.log(n) + 0.6931471805599453))
     lambda_star = 2 * n * (((1 - 1 / math.e) * alpha + beta) ** 2) * (epsilon ** -2)
     theta = lambda_star / LB
+    # print(theta)
     while len(R) < theta:
         v = random.randint(1, n)
         rr = generate_rr(out_graph, in_graph, v, model)
@@ -154,8 +159,9 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
 
 # -i C:\Users\Jiash\Desktop\IMP\DatasetOnTestPlatform\NetHEPT.txt -k 5 -m IC -t 60
 if __name__ == '__main__':
+    start = time.time()
     l = 1
-    epsilon = 0.5
+    epsilon = 0.1
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--network', type=str)
@@ -169,6 +175,7 @@ if __name__ == '__main__':
     seedCount = args.seedCount
     model = args.model
     time_limit = args.time
+    # print(network, seedCount, model, time_limit)
 
     fin = open(network)
     lines = fin.readlines()
@@ -194,8 +201,8 @@ if __name__ == '__main__':
         outGraph[source].append((source, dest, weight))
         inGraph[dest].append((source, dest, weight))
 
-    epsilon = 0.1
-    l = 1
     seeds = IMM(outGraph, inGraph, vertexNumber, seedCount, epsilon, l, model)
     for vertex in seeds:
         print(vertex)
+    end = time.time()
+    # print(end - start)

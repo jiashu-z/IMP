@@ -3,22 +3,22 @@ import time
 
 if __name__ == '__main__':
     random.seed(time.time())
-    vertex_num = 60000
-    edge_num = 150000
-    seed_num = 6000
-    assert seed_num <= vertex_num
-
-    out = open('DatasetOnTestPlatform/seed_6000_1.txt', 'w')
-    seed_set = set()
-    for i in range(seed_num):
-        new_seed = random.randint(0, vertex_num - 1)
-        while new_seed in seed_set:
-            new_seed = random.randint(0, vertex_num - 1)
-        seed_set.add(new_seed)
-    for seed in seed_set:
-        out.write('{}\n'.format(seed))
-    out.flush()
-    out.close()
+    vertex_num = 100000
+    edge_num = 250000
+    # seed_num = 6000
+    # assert seed_num <= vertex_num
+    #
+    # out = open('DatasetOnTestPlatform/seed_6000_1.txt', 'w')
+    # seed_set = set()
+    # for i in range(seed_num):
+    #     new_seed = random.randint(0, vertex_num - 1)
+    #     while new_seed in seed_set:
+    #         new_seed = random.randint(0, vertex_num - 1)
+    #     seed_set.add(new_seed)
+    # for seed in seed_set:
+    #     out.write('{}\n'.format(seed))
+    # out.flush()
+    # out.close()
 
     edges = []
     vertex_in_edge_count = {}
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     for edge in edges:
         dest = edge[1]
         edge[2] = 1.0 / vertex_in_edge_count[dest]
-    out = open('DatasetOnTestPlatform/in_60000_150000_1.txt', 'w')
+    out = open('DatasetOnTestPlatform/in_100000_250000_1.txt', 'w')
     out.write('{} {}\n'.format(vertex_num, edge_num))
     for edge in edges:
         out.write('{} {} {}\n'.format(edge[0], edge[1], edge[2]))
