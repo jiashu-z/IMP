@@ -33,7 +33,7 @@ def F_R(R, S):
             count += 1
     return count / denominator
 
-
+# TODO: A Bug.
 def node_select(R, k):
     S_k = set()
     vertex_list_map = {}
@@ -41,6 +41,13 @@ def node_select(R, k):
     i: int = 0
     R_length = len(R)
     while i < R_length:
+        # rr = R[i]
+        # exist_set = set()
+        # for v in rr:
+        #     if v not in exist_set:
+        #         exist_set.add(v)
+        #     else:
+        #         print('DUPLICATE!!!')
         for vertex in R[i]:
             if vertex not in vertex_list_map:
                 vertex_list_map[vertex] = []
@@ -60,6 +67,9 @@ def node_select(R, k):
         for rr_id in vertex_list_map[v]:
             for vertex in R[rr_id]:
                 vertex_frequency_map[vertex] -= 1
+    for k, v in vertex_frequency_map.items():
+        if v < 0:
+            print(k, v, 'v < 0!!!')
     return S_k
 
 
@@ -72,10 +82,13 @@ def generate_rr(out_graph, in_graph, v, model):
         while len(activate_set) > 0:
             new_activate_set = set()
             for act in activate_set:
+                if act not in in_graph:
+                    continue
                 for (source, dest, weight) in in_graph[act]:
                     if source in activated:
                         continue
-                    if weight >= random.random():
+                    prob = random.random()
+                    if weight > prob:
                         new_activate_set.add(source)
                         activated.add(source)
             activate_set = new_activate_set
@@ -83,9 +96,9 @@ def generate_rr(out_graph, in_graph, v, model):
         while len(activate_set) > 0:
             new_activate_set = set()
             for act in activate_set:
-                in_degree = len(in_graph[act])
-                if in_degree == 0:
+                if act not in in_graph:
                     continue
+                in_degree = len(in_graph[act])
                 rand_idx = random.randint(0, in_degree - 1)
                 # print(in_graph[act])
                 # print(rand_idx)
@@ -123,8 +136,8 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
     epsilon_prime = epsilon * 1.41421356237
     i = 1
     upper = int(math.log2(n - 1)) + 1
-    while time.time() - start < time_limit - 20:
-        # while i < upper:
+    # while time.time() - start < time_limit - 20:
+    while i < upper:
         # print('sampling', i, math.log2(n))
         x = n / math.pow(2, i)
         theta_i = lambda_prime(n, k, l, epsilon_prime) / x
@@ -138,10 +151,10 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
         # print('Exit node select')
 
         cover_ratio = F_R(R, S_i)
-        # if n * cover_ratio >= (1 + epsilon_prime) * x:
-        LB = n * cover_ratio / (1 + epsilon_prime)
-        # break
-        # i += 1
+        if n * cover_ratio >= (1 + epsilon_prime) * x:
+            LB = n * cover_ratio / (1 + epsilon_prime)
+            break
+        i += 1
 
     # print('exhausted', len(R))
     alpha = math.sqrt(l * math.log(n) + 0.6931471805599453)
@@ -160,6 +173,7 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
 # -i C:\Users\Jiash\Desktop\IMP\DatasetOnTestPlatform\NetHEPT.txt -k 5 -m IC -t 60
 if __name__ == '__main__':
     start = time.time()
+    random.seed(start)
     l = 1
     epsilon = 0.1
 
@@ -185,20 +199,19 @@ if __name__ == '__main__':
     vertexNumber = int(line0.split(' ')[0])
     edgeNumber = int(line0.split(' ')[1])
 
-    outGraph = []
-    inGraph = []
-    outGraph.append((-1, -1, -1))
-    inGraph.append((-1, -1, -1))
-    for i in range(vertexNumber + 1):
-        outGraph.append([])
-        inGraph.append([])
+    outGraph = {}
+    inGraph = {}
 
     for line in lines[1:]:
         tokens = line.split(' ')
         source = int(tokens[0])
         dest = int(tokens[1])
         weight = float(tokens[2])
+        if source not in outGraph:
+            outGraph[source] = []
         outGraph[source].append((source, dest, weight))
+        if dest not in inGraph:
+            inGraph[dest] = []
         inGraph[dest].append((source, dest, weight))
 
     seeds = IMM(outGraph, inGraph, vertexNumber, seedCount, epsilon, l, model)
