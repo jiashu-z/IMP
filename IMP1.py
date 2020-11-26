@@ -2,6 +2,7 @@ import argparse
 import random
 import math
 import time
+import os
 
 
 def log_comb(n, k) -> float:
@@ -34,7 +35,6 @@ def F_R(R, S):
     return count / denominator
 
 
-# TODO: A Bug.
 def node_select(R, k):
     S_k = set()
     vertex_list_map = {}
@@ -42,14 +42,14 @@ def node_select(R, k):
     i: int = 0
     R_length = len(R)
     while i < R_length:
-        # rr = R[i]
+        rr = R[i]
         # exist_set = set()
         # for v in rr:
         #     if v not in exist_set:
         #         exist_set.add(v)
         #     else:
         #         print('DUPLICATE!!!')
-        for vertex in R[i]:
+        for vertex in rr:
             if vertex not in vertex_list_map:
                 vertex_list_map[vertex] = set()
             vertex_list_map[vertex].add(i)
@@ -141,9 +141,10 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
     R = []
     epsilon_prime = epsilon * 1.41421356237
     i = 1
-    upper = int(math.log2(n - 1)) + 1
-    # while time.time() - start < time_limit - 20:
-    while i < upper:
+    # upper = int(math.log2(n - 1)) + 1
+    while time.time() - start < time_limit - 20:
+        # print(time.time() - start)
+    # while i < upper:
         # print('sampling', i, math.log2(n))
         x = n / math.pow(2, i)
         theta_i = lambda_prime(n, k, l, epsilon_prime) / x
@@ -157,19 +158,19 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
         # print('Exit node select')
 
         cover_ratio = F_R(R, S_i)
-        if n * cover_ratio >= (1 + epsilon_prime) * x:
-            LB = n * cover_ratio / (1 + epsilon_prime)
-            break
-        i += 1
+        # if n * cover_ratio >= (1 + epsilon_prime) * x:
+        LB = n * cover_ratio / (1 + epsilon_prime)
+            # break
+        # i += 1
 
-    # print('exhausted', len(R))
     alpha = math.sqrt(l * math.log(n) + 0.6931471805599453)
     beta = math.sqrt(
         (1 - 1 / math.e) * (log_comb(n, k) + l * math.log(n) + 0.6931471805599453))
     lambda_star = 2 * n * (((1 - 1 / math.e) * alpha + beta) ** 2) * (epsilon ** -2)
     theta = lambda_star / LB
+    # print('exhausted', len(R), theta, time.time() - start)
     # print(theta)
-    while len(R) < theta:
+    while len(R) < theta and time.time() - start < time_limit - 20:
         v = random.randint(1, n)
         rr = generate_rr(out_graph, in_graph, v, model)
         R.append(rr)
@@ -225,3 +226,4 @@ if __name__ == '__main__':
         print(vertex)
     end = time.time()
     # print(end - start)
+    os._exit
