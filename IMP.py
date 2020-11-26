@@ -82,19 +82,16 @@ def generate_rr(out_graph, in_graph, v, model):
         while len(activate_set) > 0:
             new_activate_set = set()
             for act in activate_set:
-                rand_map = {}
-                sum = 0.0
-                for (source, dest, weight) in in_graph[act]:
-                    if source in activated:
-                        continue
-                    rand_map[source] = random.random()
-                    sum += rand_map[source]
-                for (source, dest, weight) in in_graph[act]:
-                    if source in activated:
-                        continue
-                    if weight >= (rand_map[source] / sum):
-                        new_activate_set.add(source)
-                        activated.add(source)
+                in_degree = len(in_graph[act])
+                if in_degree == 0:
+                    continue
+                rand_idx = random.randint(0, in_degree - 1)
+                # print(in_graph[act])
+                # print(rand_idx)
+                source = in_graph[act][rand_idx][0]
+                if source not in activated:
+                    activated.add(source)
+                    new_activate_set.add(source)
             activate_set = new_activate_set
     return activated
 
@@ -131,7 +128,7 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
         theta_i = lambda_prime(n, k, l, epsilon_prime) / x
         while len(R) < theta_i:
             # print('sampling: len(R)', len(R), 'theta_i:', theta_i)
-            v = random.randint(1, n + 1)
+            v = random.randint(1, n)
             RR = generate_rr(out_graph, in_graph, v, model)
             R.append(RR)
         # print('Enter node_select')
@@ -149,7 +146,7 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
     lambda_star = 2 * n * (((1 - 1 / math.e) * alpha + beta) ** 2) * (epsilon ** -2)
     theta = lambda_star / LB
     while len(R) < theta:
-        v = random.randint(1, n + 1)
+        v = random.randint(1, n)
         rr = generate_rr(out_graph, in_graph, v, model)
         R.append(rr)
     return R
@@ -197,7 +194,7 @@ if __name__ == '__main__':
         outGraph[source].append((source, dest, weight))
         inGraph[dest].append((source, dest, weight))
 
-    epsilon = 0.5
+    epsilon = 0.1
     l = 1
     seeds = IMM(outGraph, inGraph, vertexNumber, seedCount, epsilon, l, model)
     for vertex in seeds:
