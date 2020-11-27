@@ -6,52 +6,53 @@ import sys
 import os
 
 
-def IMM(out_graph, in_graph, n, k, epsilon, l, model):
+def IMM(n, k, l, model):
     l = l * (1 + 0.6931471805599453 / math.log(n))
-    R = sampling(out_graph, in_graph, n, k, epsilon, l, model)
-    S_k = node_select(R, k)
+    sampling(n, model)
+    S_k = node_select(k)
     return S_k
 
 
-def node_select(R, k):
+def node_select(k):
     S_k = set()
     vertex_list_map = {}
-    vertex_frequency_map = {}
-    i: int = 0
     R_length = len(R)
-    while i < R_length:
+    for i in range(0, R_length):
         for vertex in R[i]:
             if vertex not in vertex_list_map:
-                vertex_list_map[vertex] = set()
-            vertex_list_map[vertex].add(i)
-        i += 1
-    for vertex in vertex_list_map:
-        vertex_frequency_map[vertex] = len(vertex_list_map[vertex])
+                vertex_list_map[vertex] = list()
+            vertex_list_map[vertex].append(i)
     for i in range(0, k):
         v = None
         max_frequency = -1
-        for vertex in vertex_frequency_map:
-            frequency = vertex_frequency_map[vertex]
+        for vertex in vertex_list_map:
+            frequency = len(vertex_list_map[vertex])
             if frequency > max_frequency:
                 v = vertex
                 max_frequency = frequency
         S_k.add(v)
+        tmp_map = {}
         for rr_id in vertex_list_map[v]:
             for vertex in R[rr_id]:
                 if vertex == v:
                     continue
-                vertex_frequency_map[vertex] -= 1
-                vertex_list_map[vertex].remove(rr_id)
+
+                if vertex not in tmp_map:
+                    tmp_map[vertex] = set()
+                tmp_map[vertex].add(rr_id)
+
+                # vertex_list_map[vertex].remove(rr_id)
         del [vertex_list_map[v]]
-        del [vertex_frequency_map[v]]
+        for vertex in tmp_map:
+            old_set = set(vertex_list_map[vertex])
+            dif_set = tmp_map[vertex]
+            vertex_list_map[vertex] = list(old_set.difference(dif_set))
     return S_k
 
 
-def generate_rr(out_graph, in_graph, v, model):
-    activated = set()
-    activate_set = set()
-    activate_set.add(v)
-    activated.add(v)
+def generate_rr(v, model):
+    activated = [v]
+    activate_set = [v]
     if model == 'IC':
         while len(activate_set) > 0:
             new_activate_set = set()
@@ -64,7 +65,7 @@ def generate_rr(out_graph, in_graph, v, model):
                     prob = random.random()
                     if weight > prob:
                         new_activate_set.add(source)
-                        activated.add(source)
+                        activated.append(source)
             activate_set = new_activate_set
     else:
         while len(activate_set) > 0:
@@ -76,24 +77,36 @@ def generate_rr(out_graph, in_graph, v, model):
                 rand_idx = random.randint(0, in_degree - 1)
                 source = in_graph[act][rand_idx][0]
                 if source not in activated:
-                    activated.add(source)
+                    activated.append(source)
                     new_activate_set.add(source)
             activate_set = new_activate_set
-    return activated
+    return list(set(activated))
 
 
-def sampling(out_graph, in_graph, n, k, epsilon, l, model):
-    R = []
-    while time.time() - start < time_limit / 2 and len(R) < 3000000:
-        # print(time.time() - start)
+def sampling(n, model):
+    idx = 0
+    total = 0
+    size_of_R = 0
+    unit = 0
+    while time.time() - start < time_limit / 2 and total < 512 * 1024 * 1024:
         v = random.randint(1, n)
-        RR = generate_rr(out_graph, in_graph, v, model)
+        RR = generate_rr(v, model)
+        if idx == 0:
+            unit = sys.getsizeof(RR)
+            total -= size_of_R
+            size_of_R = sys.getsizeof(R)
+            total += size_of_R
+        idx += 1
+        idx %= 16
+        total += unit
         R.append(RR)
-    return R
+    print('size', total)
+    print('len', len(R))
 
 
 # -i C:\Users\Jiash\Desktop\IMP\DatasetOnTestPlatform\NetHEPT.txt -k 5 -m IC -t 60
 if __name__ == '__main__':
+    R = []
     start = time.time()
     random.seed(start)
     l = 1
@@ -121,25 +134,21 @@ if __name__ == '__main__':
     vertexNumber = int(line0.split(' ')[0])
     edgeNumber = int(line0.split(' ')[1])
 
-    outGraph = {}
-    inGraph = {}
+    in_graph = {}
 
     for line in lines[1:]:
         tokens = line.split(' ')
         source = int(tokens[0])
         dest = int(tokens[1])
         weight = float(tokens[2])
-        if source not in outGraph:
-            outGraph[source] = []
-        outGraph[source].append((source, dest, weight))
-        if dest not in inGraph:
-            inGraph[dest] = []
-        inGraph[dest].append((source, dest, weight))
+        if dest not in in_graph:
+            in_graph[dest] = []
+        in_graph[dest].append((source, dest, weight))
 
-    seeds = IMM(outGraph, inGraph, vertexNumber, seedCount, epsilon, l, model)
+    seeds = IMM(vertexNumber, seedCount, l, model)
     for vertex in seeds:
         print(vertex)
     end = time.time()
-    # print('time', end - start)
+    print('time', end - start)
     sys.stdout.flush()
     os._exit

@@ -3,8 +3,8 @@ import time
 
 if __name__ == '__main__':
     random.seed(time.time())
-    vertex_num = 100000
-    edge_num = 250000
+    vertex_num = 60000
+    edge_num = 150000
     # seed_num = 6000
     # assert seed_num <= vertex_num
     #
