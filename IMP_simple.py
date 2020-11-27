@@ -2,12 +2,15 @@ import argparse
 import random
 import time
 import os
-from memory_profiler import profile
 
 
-@profile
+# from memory_profiler import profile
+
+
+# @profile
 def imm():
     r = sampling()
+    print('len', len(r))
     s_k = node_select(r)
     return s_k
 

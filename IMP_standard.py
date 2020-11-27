@@ -2,6 +2,8 @@ import argparse
 import random
 import math
 import time
+import sys
+import os
 
 
 def log_comb(n, k) -> float:
@@ -20,7 +22,7 @@ def log_comb(n, k) -> float:
 def IMM(out_graph, in_graph, n, k, epsilon, l, model):
     l = l * (1 + 0.6931471805599453 / math.log(n))
     R = sampling(out_graph, in_graph, n, k, epsilon, l, model)
-    # print('end sampling')
+    print('len', len(R))
     S_k = node_select(R, k)
     return S_k
 
@@ -213,4 +215,6 @@ if __name__ == '__main__':
     for vertex in seeds:
         print(vertex)
     end = time.time()
-    # print(end - start)
+    print('time', end - start)
+    sys.stdout.flush()
+    os._exit

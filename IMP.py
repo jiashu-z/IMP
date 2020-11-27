@@ -2,20 +2,8 @@ import argparse
 import random
 import math
 import time
+import sys
 import os
-
-
-def log_comb(n, k) -> float:
-    res = 0.0
-    i = 0
-    while i < k:
-        res += math.log(n)
-        n -= 1
-        i += 1
-    while k > 1:
-        res -= math.log(k)
-        k -= 1
-    return res
 
 
 def IMM(out_graph, in_graph, n, k, epsilon, l, model):
@@ -96,7 +84,8 @@ def generate_rr(out_graph, in_graph, v, model):
 
 def sampling(out_graph, in_graph, n, k, epsilon, l, model):
     R = []
-    while time.time() - start < time_limit / 3:
+    while time.time() - start < time_limit / 2 and len(R) < 3000000:
+        # print(time.time() - start)
         v = random.randint(1, n)
         RR = generate_rr(out_graph, in_graph, v, model)
         R.append(RR)
@@ -151,4 +140,6 @@ if __name__ == '__main__':
     for vertex in seeds:
         print(vertex)
     end = time.time()
+    # print('time', end - start)
+    sys.stdout.flush()
     os._exit
