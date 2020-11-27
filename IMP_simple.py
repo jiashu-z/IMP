@@ -2,8 +2,6 @@ import argparse
 import random
 import time
 import os
-
-
 # from memory_profiler import profile
 
 
@@ -39,11 +37,11 @@ def node_select(r):
                 max_frequency = frequency
         s_k.add(v)
         for rr_id in vertex_list_map[v]:
-            for v in r[rr_id]:
-                if v == v:
+            for v1 in r[rr_id]:
+                if v1 == v:
                     continue
-                vertex_frequency_map[v] -= 1
-                vertex_list_map[v].remove(rr_id)
+                vertex_frequency_map[v1] -= 1
+                vertex_list_map[v1].remove(rr_id)
         del [vertex_list_map[v]]
         del [vertex_frequency_map[v]]
     return s_k
@@ -86,10 +84,11 @@ def generate_rr(v):
 
 def sampling():
     r = []
-    while time.time() - start < time_limit / 3:
+    while (time.time() - start) < time_limit:
         v = random.randint(1, n)
         rr = generate_rr(v)
         r.append(rr)
+    print('len', len(r))
     return r
 
 
@@ -109,6 +108,7 @@ if __name__ == '__main__':
     k = args.seedCount
     model = args.model
     time_limit = args.time
+    time_limit = time_limit * 0.5
 
     fin = open(network)
     lines = fin.readlines()
@@ -133,5 +133,5 @@ if __name__ == '__main__':
     for vertex in seeds:
         print(vertex)
     end = time.time()
-    # print(end - start)
+    print(end - start)
     os._exit

@@ -164,6 +164,7 @@ def sampling(out_graph, in_graph, n, k, epsilon, l, model):
         v = random.randint(1, n)
         rr = generate_rr(out_graph, in_graph, v, model)
         R.append(rr)
+    print('len', len(R))
     return R
 
 
