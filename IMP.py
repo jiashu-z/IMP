@@ -2,6 +2,7 @@ import argparse
 import random
 import math
 import time
+import os
 
 
 def log_comb(n, k) -> float:
@@ -20,21 +21,10 @@ def log_comb(n, k) -> float:
 def IMM(out_graph, in_graph, n, k, epsilon, l, model):
     l = l * (1 + 0.6931471805599453 / math.log(n))
     R = sampling(out_graph, in_graph, n, k, epsilon, l, model)
-    # print('end sampling')
     S_k = node_select(R, k)
     return S_k
 
 
-def F_R(R, S):
-    denominator = len(R)
-    count = 0.0
-    for rr in R:
-        if len(S.intersection(rr)) > 0:
-            count += 1
-    return count / denominator
-
-
-# TODO: A Bug.
 def node_select(R, k):
     S_k = set()
     vertex_list_map = {}
@@ -42,13 +32,6 @@ def node_select(R, k):
     i: int = 0
     R_length = len(R)
     while i < R_length:
-        # rr = R[i]
-        # exist_set = set()
-        # for v in rr:
-        #     if v not in exist_set:
-        #         exist_set.add(v)
-        #     else:
-        #         print('DUPLICATE!!!')
         for vertex in R[i]:
             if vertex not in vertex_list_map:
                 vertex_list_map[vertex] = set()
@@ -73,9 +56,6 @@ def node_select(R, k):
                 vertex_list_map[vertex].remove(rr_id)
         del [vertex_list_map[v]]
         del [vertex_frequency_map[v]]
-    # for k, v in vertex_frequency_map.items():
-    #     if v < 0:
-    #         print(k, v, 'v < 0!!!')
     return S_k
 
 
@@ -106,8 +86,6 @@ def generate_rr(out_graph, in_graph, v, model):
                     continue
                 in_degree = len(in_graph[act])
                 rand_idx = random.randint(0, in_degree - 1)
-                # print(in_graph[act])
-                # print(rand_idx)
                 source = in_graph[act][rand_idx][0]
                 if source not in activated:
                     activated.add(source)
@@ -116,63 +94,12 @@ def generate_rr(out_graph, in_graph, v, model):
     return activated
 
 
-def comb(n, k):
-    p = 1
-    i = 1
-    while n > k:
-        p *= n
-        p /= i
-        n -= 1
-    return p
-
-
-def lambda_prime(n, k, l, epsilon_prime):
-    # print('epsilon_prime', epsilon_prime)
-    numerator = (2 + 2 * epsilon_prime / 3) * (
-            log_comb(n, k) + l * math.log(n) + math.log(math.log2(n))) * n
-    denominator = epsilon_prime ** 2
-    # print('numerator', numerator)
-    # print('denominator', denominator)
-    return numerator / denominator
-
-
 def sampling(out_graph, in_graph, n, k, epsilon, l, model):
-    LB = 1
     R = []
-    epsilon_prime = epsilon * 1.41421356237
-    i = 1
-    upper = int(math.log2(n - 1)) + 1
-    # while time.time() - start < time_limit - 20:
-    while i < upper:
-        # print('sampling', i, math.log2(n))
-        x = n / math.pow(2, i)
-        theta_i = lambda_prime(n, k, l, epsilon_prime) / x
-        while len(R) < theta_i:
-            # print('sampling: len(R)', len(R), 'theta_i:', theta_i)
-            v = random.randint(1, n)
-            RR = generate_rr(out_graph, in_graph, v, model)
-            R.append(RR)
-        # print('Enter node_select')
-        S_i = node_select(R, k)
-        # print('Exit node select')
-
-        cover_ratio = F_R(R, S_i)
-        if n * cover_ratio >= (1 + epsilon_prime) * x:
-            LB = n * cover_ratio / (1 + epsilon_prime)
-            break
-        i += 1
-
-    # print('exhausted', len(R))
-    alpha = math.sqrt(l * math.log(n) + 0.6931471805599453)
-    beta = math.sqrt(
-        (1 - 1 / math.e) * (log_comb(n, k) + l * math.log(n) + 0.6931471805599453))
-    lambda_star = 2 * n * (((1 - 1 / math.e) * alpha + beta) ** 2) * (epsilon ** -2)
-    theta = lambda_star / LB
-    # print(theta)
-    while len(R) < theta:
+    while time.time() - start < time_limit / 3:
         v = random.randint(1, n)
-        rr = generate_rr(out_graph, in_graph, v, model)
-        R.append(rr)
+        RR = generate_rr(out_graph, in_graph, v, model)
+        R.append(RR)
     return R
 
 
@@ -224,4 +151,4 @@ if __name__ == '__main__':
     for vertex in seeds:
         print(vertex)
     end = time.time()
-    # print(end - start)
+    os._exit
