@@ -4,7 +4,12 @@ import random
 import math
 import sys
 
+
+def binary_search_update(tuple_list, target) -> None:
+    tuple_list[1] = (tuple_list[1][0], True)
+
+
 if __name__ == '__main__':
-    s1 = {1, 2, 3}
-    s2 = {2, 3, 4}
-    print(s1.difference(s2))
+    l1 = [(1, True), (2, False)]
+    binary_search_update(l1, 2)
+    print(l1)

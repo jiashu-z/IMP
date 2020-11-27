@@ -6,6 +6,21 @@ import sys
 import os
 
 
+def binary_search_update(tuple_list, target) -> None:
+    left = 0
+    right = len(tuple_list) - 1
+    while left <= right:
+        mid = left + (right - left) // 2
+        if tuple_list[mid][0] == target:
+            tuple_list[mid] = (tuple_list[mid][0], True)
+            return
+        if tuple_list[mid][0] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    pass
+
+
 def IMM(n, k, l, model):
     l = l * (1 + 0.6931471805599453 / math.log(n))
     sampling(n, model)
@@ -15,38 +30,36 @@ def IMM(n, k, l, model):
 
 def node_select(k):
     S_k = set()
-    vertex_list_map = {}
+
+    vertex_map = {}
     R_length = len(R)
     for i in range(0, R_length):
         for vertex in R[i]:
-            if vertex not in vertex_list_map:
-                vertex_list_map[vertex] = list()
-            vertex_list_map[vertex].append(i)
+            if vertex not in vertex_map:
+                vertex_map[vertex] = ([], 0)
+            vertex_map[vertex][0].append((i, False))
+    for it in vertex_map:
+        vertex_map[it] = (vertex_map[it][0], len(vertex_map[it][0]))
     for i in range(0, k):
         v = None
         max_frequency = -1
-        for vertex in vertex_list_map:
-            frequency = len(vertex_list_map[vertex])
+        for vertex in vertex_map:
+            frequency = vertex_map[vertex][1]
             if frequency > max_frequency:
                 v = vertex
                 max_frequency = frequency
         S_k.add(v)
-        tmp_map = {}
-        for rr_id in vertex_list_map[v]:
+        for rr_id, discarded in vertex_map[v][0]:
+            if discarded:
+                continue
             for vertex in R[rr_id]:
-                if vertex == v:
+                if vertex == v or vertex not in vertex_map:
                     continue
-
-                if vertex not in tmp_map:
-                    tmp_map[vertex] = set()
-                tmp_map[vertex].add(rr_id)
-
-                # vertex_list_map[vertex].remove(rr_id)
-        del [vertex_list_map[v]]
-        for vertex in tmp_map:
-            old_set = set(vertex_list_map[vertex])
-            dif_set = tmp_map[vertex]
-            vertex_list_map[vertex] = list(old_set.difference(dif_set))
+                vertex_map[vertex] = (vertex_map[vertex][0], vertex_map[vertex][1] - 1)
+                # TODO: Implement a binary search update here.
+                # Implemented.
+                binary_search_update(vertex_map[vertex][0], rr_id)
+        del vertex_map[v]
     return S_k
 
 
@@ -100,6 +113,7 @@ def sampling(n, model):
         idx %= 16
         total += unit
         R.append(RR)
+    print('time bond', time.time() - start)
     print('size', total)
     print('len', len(R))
 
