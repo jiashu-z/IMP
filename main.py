@@ -10,6 +10,6 @@ def binary_search_update(tuple_list, target) -> None:
 
 
 if __name__ == '__main__':
-    l1 = [(1, True), (2, False)]
-    binary_search_update(l1, 2)
-    print(l1)
+    l = [1, 2, 3, 4]
+    l = list(filter(lambda x: x <= 3, l))
+    print(l)

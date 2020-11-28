@@ -3,8 +3,8 @@ import time
 
 if __name__ == '__main__':
     random.seed(time.time())
-    vertex_num = 60000
-    edge_num = 150000
+    vertex_num = int(1E5)
+    edge_num = int(1E6)
     # seed_num = 6000
     # assert seed_num <= vertex_num
     #
@@ -22,11 +22,11 @@ if __name__ == '__main__':
 
     edges = []
     vertex_in_edge_count = {}
-    for i in range(edge_num):
-        source = random.randint(0, vertex_num - 1)
-        dest = random.randint(0, vertex_num - 1)
+    for i in range(int(edge_num)):
+        source = random.randint(0, int(vertex_num) - 1)
+        dest = random.randint(0, int(vertex_num) - 1)
         while dest == source:
-            dest = random.randint(0, vertex_num - 1)
+            dest = random.randint(0, int(vertex_num) - 1)
         edges.append([source, dest, 0.0])
     for edge in edges:
         dest = edge[1]
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     for edge in edges:
         dest = edge[1]
         edge[2] = 1.0 / vertex_in_edge_count[dest]
-    out = open('DatasetOnTestPlatform/in_100000_250000_1.txt', 'w')
+    out = open('DatasetOnTestPlatform/in_1E5_1E6_1.txt', 'w')
     out.write('{} {}\n'.format(vertex_num, edge_num))
     for edge in edges:
         out.write('{} {} {}\n'.format(edge[0], edge[1], edge[2]))

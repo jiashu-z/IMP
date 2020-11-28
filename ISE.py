@@ -155,7 +155,7 @@ if __name__ == '__main__':
     for process in processes:
         res += process.get()
 
-    # print(res / core)
+    print(res / core)
     # end = time.time()
     sys.stdout.flush()
     # print(end - start)
