@@ -2,27 +2,33 @@
 # -i DatasetOnTestPlatform/network.txt -s DatasetOnTestPlatform/network_seeds.txt -m LT -t 60
 # -i DatasetOnTestPlatform/NetHEPT.txt -s DatasetOnTestPlatform/network_seeds.txt -m IC -t 60
 # -i DatasetOnTestPlatform/NetHEPT.txt -s DatasetOnTestPlatform/network_seeds.txt -m LT -t 60
+# -i DatasetOnTestPlatform/in_60000_150000_1.txt -s DatasetOnTestPlatform/seed_6000_1.txt -m LT -t 60
 
 import argparse
 import numpy as np
 import time
 import random
+import multiprocessing as mp
+import sys
+import os
+
+core = 7
 
 
-# TODO: Dynamically adjust the number of rounds.
-def ise_ic_expect(graph, activated_set) -> float:
+def ise_ic_expect(graph, activated_set, ic_vertex_num, start_time, limit) -> float:
     summation: float = 0.0
     ic_round: int = 0
-    while ic_round < 1000:
-        summation += ise_ic(graph=graph, activated_set=activated_set)
+    while True:
+        if time.time() - start_time > limit:
+            break
+        summation += ise_ic(graph=graph, activated_set=activated_set, num=ic_vertex_num)
         ic_round += 1
     return summation / ic_round
 
 
-# TODO: This is not a time and space optimized version.
-def ise_ic(graph, activated_set) -> int:
+def ise_ic(graph, activated_set, num) -> int:
     activated_num = len(activated_set)
-    activated: list = [False] * (vertex_num + 1)
+    activated: list = [False] * (num + 1)
     for vertex in activated_set:
         activated[vertex] = True
     while len(activated_set) > 0:
@@ -40,24 +46,24 @@ def ise_ic(graph, activated_set) -> int:
     return activated_num
 
 
-# TODO: Dynamically adjust the number of rounds.
-def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set) -> float:
+def ise_lt_expect(lt_out_graph, lt_in_graph, activated_set, lt_vertex_num, start_time, limit) -> float:
     summation: float = 0.0
     lt_round: int = 0
-    while lt_round < 1000:
+    while True:
+        if time.time() - start_time > limit:
+            break
         summation += ise_lt(lt_out_graph=lt_out_graph, lt_in_graph=lt_in_graph,
-                            activated_set=activated_set)
+                            activated_set=activated_set, num=lt_vertex_num)
         lt_round += 1
     return summation / lt_round
 
 
-# TODO: This is not a time and space optimized version.
-def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
+def ise_lt(lt_out_graph, lt_in_graph, activated_set, num) -> int:
     activated_num = len(activated_set)
-    activated: list = [False] * (vertex_num + 1)
+    activated: list = [False] * (num + 1)
     for vertex in activated_set:
         activated[vertex] = True
-    # numpy is awesome!
+    np.random.seed(random.randint(0, 19260817))
     threshold_list = np.random.uniform(size=(len(lt_out_graph) + 1))
 
     length = len(lt_out_graph)
@@ -84,10 +90,14 @@ def ise_lt(lt_out_graph, lt_in_graph, activated_set) -> int:
     return activated_num
 
 
-# TODO: Add multi-processing parallelism.
 if __name__ == '__main__':
     start = time.time()
     np.random.seed(int(time.time()))
+    pool = mp.Pool(core)
+    processes = []
+    result = [0.0] * core
+    res: float = 0.0
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--file_name', type=str, default='network.txt')
     parser.add_argument('-s', '--seed', type=str, default='seeds.txt')
@@ -116,28 +126,37 @@ if __name__ == '__main__':
 
     if model == 'IC':
         out_graph = []
-        i: int = 0
-        while i <= vertex_num:
+        for i in range(vertex_num + 1):
             out_graph.append([])
-            i += 1
+
         for line in lines[1:]:
             tokens = line.split(' ')
             out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
-        res = ise_ic_expect(graph=out_graph, activated_set=seed_list)
+        for i in range(core):
+            processes.append(
+                pool.apply_async(ise_ic_expect, args=(out_graph, seed_list, vertex_num, time.time(), time_limit - 5)))
     else:
         out_graph = []
         in_graph = []
-        i: int = 0
-        while i <= vertex_num:
+        for i in range(vertex_num + 1):
             out_graph.append([])
             in_graph.append([])
-            i += 1
+
         for line in lines[1:]:
             tokens = line.split(' ')
             out_graph[int(tokens[0])].append((int(tokens[1]), float(tokens[2])))
             in_graph[int(tokens[1])].append((int(tokens[0]), float(tokens[2])))
-        res = ise_lt_expect(lt_out_graph=out_graph, lt_in_graph=in_graph, activated_set=seed_list)
+        for i in range(core):
+            processes.append(pool.apply_async(ise_lt_expect, args=(
+                out_graph, in_graph, seed_list, vertex_num, time.time(), time_limit - 5)))
 
-    print(res)
-    end = time.time()
-    print(end - start)
+    pool.close()
+    pool.join()
+    for process in processes:
+        res += process.get()
+
+    print(res / core)
+    # end = time.time()
+    sys.stdout.flush()
+    # print(end - start)
+    os._exit
